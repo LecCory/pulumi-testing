@@ -1,0 +1,11 @@
+{
+    "name": "newProj",
+    "devDependencies": {
+        "@types/node": "^14"
+    },
+    "dependencies": {
+        "@pulumi/azure-native": "^1.0.0",
+        "@pulumi/pulumi": "^3.0.0",
+        "typescript": "^4.6.3"
+    }
+}
