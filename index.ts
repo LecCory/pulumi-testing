@@ -1,17 +1,21 @@
 // Import the resources
-import AzStorageAcctBuilder from "./storage"
+
 import * as resources from "@pulumi/azure-native/resources";
+import * as storage from "@pulumi/azure-native/storage"
+
+
+
 
 // Build
 const resourceGroup = new resources.ResourceGroup("resourceGroup");
-const newAZStorageAccount = new AzStorageAcctBuilder("clsa003", "StorageV2", "Standard_LRS", resourceGroup.name).buildSAAccount()
+const newAzStorage = new storage.StorageAccount("clstorage", {resourceGroupName: resourceGroup.name, sku:{name:storage.SkuName.Standard_LRS}, kind: storage.Kind.StorageV2, enableHttpsTrafficOnly: true})
 
 
 //Export data
-export const newSa = newAZStorageAccount.sa.name
-export const newRg = resourceGroup.name
+export const newSa = newAzStorage
 
-console.log(newSa)
+
+
 
 
 
