@@ -4,8 +4,9 @@ import * as resources from "@pulumi/azure-native/resources";
 import * as storage from "@pulumi/azure-native/storage";
 import * as web from "@pulumi/azure-native/web";
 import * as pulumi from "@pulumi/pulumi";
-import { getConnectionString } from "./helpers";
+import { getConnectionString, signedBlobReadUrl } from "./helpers";
 import * as documentdb from "@pulumi/azure-native/documentdb";
+import { listDatabaseAccountConnectionStrings } from "@pulumi/azure-native/documentdb";
 
 // Build resource group referenced throughout the build
 const resourceGroup = new resources.ResourceGroup("clrg-");
@@ -31,6 +32,16 @@ const mongoDB = new documentdb.MongoDBResourceMongoDBDatabase("clmdb", {
   location: resourceGroup.location,
 });
 
+const keys = pulumi.all([resourceGroup.name, dbAccount.name])
+    .apply(([resourceGroupName, accountName]) =>
+        documentdb.listDatabaseAccountKeys({ resourceGroupName, accountName }));
+
+const connectionStrings = pulumi.all([resourceGroup.name, dbAccount.name])
+    .apply(([resourceGroupName, accountName]) =>
+        documentdb.listDatabaseAccountConnectionStrings({ resourceGroupName, accountName }));
+
+        export const connectionString = connectionStrings.apply(cs => cs.connectionStrings![0].connectionString);
+
 //Build Storage account, then deploy container to the account, extract key information for other resources
 const newAzStorage = new storage.StorageAccount("clstorage", {
   resourceGroupName: resourceGroup.name,
@@ -44,18 +55,31 @@ const newStorageContainer = new storage.StorageAccountStaticWebsite("cl-site", {
   indexDocument: "index.html",
 });
 
+// Function code archives will be stored in this container.
+const codeContainer = new storage.BlobContainer("zips", {
+  resourceGroupName: resourceGroup.name,
+  accountName: newAzStorage.name,
+});
 
-// Export the primary key of the Storage Account
-const storageAccountKeys = pulumi
-  .all([resourceGroup.name, newAzStorage.name])
-  .apply(([resourceGroupName, accountName]) =>
-    storage.listStorageAccountKeys({ resourceGroupName, accountName })
-  );
+// Upload Azure Functions code as a zip archive to the storage account.
+const codeBlob = new storage.Blob("zip", {
+  resourceGroupName: resourceGroup.name,
+  accountName: newAzStorage.name,
+  containerName: codeContainer.name,
+  source: new pulumi.asset.FileArchive("./api"),
+});
 
-  // extract connection string by use of helper function
+// extract connection string by use of helper function
 const storageConnectionString = getConnectionString(
   resourceGroup.name,
   newAzStorage.name
+);
+
+const codeBlobUrl = signedBlobReadUrl(
+  codeBlob,
+  codeContainer,
+  newAzStorage,
+  resourceGroup
 );
 
 //Build app service plan and deploy a function app to the account
@@ -73,10 +97,18 @@ const app = new web.WebApp("clfa-", {
       { name: "FUNCTIONS_EXTENSION_VERSION", value: "~3" },
       { name: "FUNCTIONS_WORKER_RUNTIME", value: "node" },
       { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~16" },
-      { name: "WEBSITE_RUN_FROM_PACKAGE", value: "1" },
+      { name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
+      { name: "MONGODB_CONNECTION", value: connectionString, }
     ],
     http20Enabled: true,
     nodeVersion: "~16",
+    
   },
 });
 
+
+
+export const saAccount = newAzStorage.name
+
+export const endpoint = dbAccount.documentEndpoint;
+export const masterKey = keys.primaryMasterKey;
