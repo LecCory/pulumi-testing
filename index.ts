@@ -38,7 +38,16 @@ const uploadFunctions = storage.codeBlob
 const newStorageConnectionString = storage.storageConnString(newResourceGroup.name, newStorageAccount.name)
 const blobUrl = storage.codeBlobUrl(uploadFunctions, newFunctionAppContainer, newStorageAccount, newResourceGroup )
 const newWebApp = webApp.newAppPlan({resourceGroup: resourceGroup.name})
-const newFA = webApp.functionApp({resourceGroup:newResourceGroup.name, plan: newWebApp.id, codeBlobUrl:blobUrl, dbAccount: newDBAccount.name, endpoint:newEndPoint, masterKey: newMasterKey, mongoDB: newMongoDB.name, storageConnectionString: newStorageConnectionString})
+const newFA = webApp.functionApp({
+  resourceGroup:newResourceGroup.name, 
+  plan: newWebApp.id, 
+  codeBlobUrl:blobUrl, 
+  dbAccount: newDBAccount.name, 
+  endpoint:newEndPoint, 
+  masterKey: newMasterKey, 
+  mongoDB: newMongoDB.name, 
+  storageConnectionString: newStorageConnectionString
+})
 
 //We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
 export const saAccount = newStorageAccount.name
