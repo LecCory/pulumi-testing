@@ -1,114 +1,44 @@
-// Import the required resource modules
+// Import component modules
+import {resourceGroup} from "./infra/resourcegroup"
+import * as cosmos from "./infra/cosmos"
+import * as storage from "./infra/storage" 
+import * as webApp from "./infra/webApp"
 
-import * as resources from "@pulumi/azure-native/resources";
-import * as storage from "@pulumi/azure-native/storage";
-import * as web from "@pulumi/azure-native/web";
-import * as pulumi from "@pulumi/pulumi";
-import { getConnectionString, signedBlobReadUrl } from "./helpers";
-import * as documentdb from "@pulumi/azure-native/documentdb";
-import { listDatabaseAccountConnectionStrings } from "@pulumi/azure-native/documentdb";
+/*
+-- Resource Group section --
+*/
+const newResourceGroup = resourceGroup
 
-// Build resource group referenced throughout the build
-const resourceGroup = new resources.ResourceGroup("clrg-");
+/*
+-- DocumentDB Account and MongoDB section --
+We export endpoint information here to be used with the function app
+*/
+const newDBAccount = cosmos.dbAccount
+const newMongoDB = cosmos.mongoDB
+const newEndPoint = cosmos.endpoint(newDBAccount)
+const newKeySet = cosmos.keys(newResourceGroup.name, newDBAccount.name)
+const newConnectionStringSet = cosmos.connectionStrings(newResourceGroup.name, newDBAccount.name)
+const primaryConnectionString = cosmos.connectionString(newConnectionStringSet)
+const newMasterKey = cosmos.masterKey(newKeySet)
 
-//Build DB Account and deploy a Mongo DB to the account
-const dbAccount = new documentdb.DatabaseAccount("cldba-", {
-  kind: "MongoDB",
-  location: resourceGroup.location,
-  databaseAccountOfferType: "Standard",
-  locations: [
-    {
-      failoverPriority: 0,
-      isZoneRedundant: false,
-      locationName: resourceGroup.location,
-    },
-  ],
-  resourceGroupName: resourceGroup.name,
-});
-const mongoDB = new documentdb.MongoDBResourceMongoDBDatabase("clmdb", {
-  accountName: dbAccount.name,
-  resource: { id: "clmdb" },
-  resourceGroupName: resourceGroup.name,
-  location: resourceGroup.location,
-});
+/*
+-- Storage and Static Web Container section --
+*/
+const newStorageAccount = storage.newAzStorage;
+const newStaticContainer = storage.newStorageContainer
 
-const keys = pulumi.all([resourceGroup.name, dbAccount.name])
-    .apply(([resourceGroupName, accountName]) =>
-        documentdb.listDatabaseAccountKeys({ resourceGroupName, accountName }));
+/*
+-- WebApp and Function App section --
+Container for function Apps API ss part of the same Storage account created previously 
+We pass all the endpoint data from the Mongo creation step to create the env variable
+Pulumi uploads the functions to the container as part of this step
+*/
+const newFunctionAppContainer = storage.codeContainer;
+const uploadFunctions = storage.codeBlob
+const newStorageConnectionString = storage.storageConnString(newResourceGroup.name, newStorageAccount.name)
+const blobUrl = storage.codeBlobUrl(uploadFunctions, newFunctionAppContainer, newStorageAccount, newResourceGroup )
+const newWebApp = webApp.newAppPlan({resourceGroup: resourceGroup.name})
+const newFA = webApp.functionApp({resourceGroup:newResourceGroup.name, plan: newWebApp.id, codeBlobUrl:blobUrl, dbAccount: newDBAccount.name, endpoint:newEndPoint, masterKey: newMasterKey, mongoDB: newMongoDB.name, storageConnectionString: newStorageConnectionString})
 
-const connectionStrings = pulumi.all([resourceGroup.name, dbAccount.name])
-    .apply(([resourceGroupName, accountName]) =>
-        documentdb.listDatabaseAccountConnectionStrings({ resourceGroupName, accountName }));
-
-        export const connectionString = connectionStrings.apply(cs => cs.connectionStrings![0].connectionString);
-
-//Build Storage account, then deploy container to the account, extract key information for other resources
-const newAzStorage = new storage.StorageAccount("clstorage", {
-  resourceGroupName: resourceGroup.name,
-  sku: { name: storage.SkuName.Standard_LRS },
-  kind: storage.Kind.StorageV2,
-  enableHttpsTrafficOnly: true,
-});
-const newStorageContainer = new storage.StorageAccountStaticWebsite("cl-site", {
-  accountName: newAzStorage.name,
-  resourceGroupName: resourceGroup.name,
-  indexDocument: "index.html",
-});
-
-// Function code archives will be stored in this container.
-const codeContainer = new storage.BlobContainer("zips", {
-  resourceGroupName: resourceGroup.name,
-  accountName: newAzStorage.name,
-});
-
-// Upload Azure Functions code as a zip archive to the storage account.
-const codeBlob = new storage.Blob("zip", {
-  resourceGroupName: resourceGroup.name,
-  accountName: newAzStorage.name,
-  containerName: codeContainer.name,
-  source: new pulumi.asset.FileArchive("./api"),
-});
-
-// extract connection string by use of helper function
-const storageConnectionString = getConnectionString(
-  resourceGroup.name,
-  newAzStorage.name
-);
-
-const codeBlobUrl = signedBlobReadUrl(
-  codeBlob,
-  codeContainer,
-  newAzStorage,
-  resourceGroup
-);
-
-//Build app service plan and deploy a function app to the account
-const plan = new web.AppServicePlan("clwsp-", {
-  resourceGroupName: resourceGroup.name,
-  sku: { name: "Y1", tier: "Dynamic" },
-});
-const app = new web.WebApp("clfa-", {
-  resourceGroupName: resourceGroup.name,
-  serverFarmId: plan.id,
-  kind: "functionapp",
-  siteConfig: {
-    appSettings: [
-      { name: "AzureWebJobsStorage", value: storageConnectionString },
-      { name: "FUNCTIONS_EXTENSION_VERSION", value: "~3" },
-      { name: "FUNCTIONS_WORKER_RUNTIME", value: "node" },
-      { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~16" },
-      { name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
-      { name: "MONGODB_CONNECTION", value: connectionString, }
-    ],
-    http20Enabled: true,
-    nodeVersion: "~16",
-    
-  },
-});
-
-
-
-export const saAccount = newAzStorage.name
-
-export const endpoint = dbAccount.documentEndpoint;
-export const masterKey = keys.primaryMasterKey;
+//We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
+export const saAccount = newStorageAccount.name
