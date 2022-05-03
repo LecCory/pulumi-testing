@@ -1,5 +1,6 @@
 import * as web from "@pulumi/azure-native/web";
 import { Output } from "@pulumi/pulumi";
+import * as pulumi from "@pulumi/pulumi";
 
 //Build app service plan and deploy a function app to the account
 
@@ -12,7 +13,7 @@ export const newAppPlan = ({
     resourceGroupName: resourceGroup,
     sku: { name: "Y1", tier: "Dynamic" },
   });
-  return plan
+  return plan;
 };
 
 export const functionApp = ({
@@ -22,7 +23,7 @@ export const functionApp = ({
   codeBlobUrl,
   dbAccount,
   masterKey,
-  endpoint,
+  port,
   mongoDB,
 }: {
   resourceGroup: Output<string>;
@@ -31,28 +32,63 @@ export const functionApp = ({
   codeBlobUrl: Output<string>;
   dbAccount: Output<string>;
   masterKey: Output<string>;
-  endpoint: Output<string>;
+  port: string;
   mongoDB: Output<string>;
 }) => {
-  new web.WebApp("clfa-", {
+  const newFa = new web.WebApp("clfa-", {
     resourceGroupName: resourceGroup,
     serverFarmId: plan,
     kind: "functionapp",
+
     siteConfig: {
+      connectionStrings: [
+        {
+          name: "MONGODB_PROTOCAL",
+          connectionString: "mongodb",
+          type: "Custom",
+        },
+        { name: "MONGODB_USER", connectionString: dbAccount, type: "Custom" },
+        { name: "MONGODB_PORT", connectionString: dbAccount, type: "Custom" },
+        { name: "MONGODB_PASS", connectionString: masterKey, type: "Custom" },
+        {
+          name: "MONGODB_URL",
+          connectionString: pulumi.interpolate`${dbAccount}.mongo.cosmos.azure.com:${port}`,
+          type: "Custom",
+        },
+        {
+          name: "MONGODB_DBNAME",
+          connectionString: pulumi.interpolate`${mongoDB}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${dbAccount}@`,
+          type: "Custom",
+        },
+      ],
       appSettings: [
         { name: "AzureWebJobsStorage", value: storageConnectionString },
         { name: "FUNCTIONS_EXTENSION_VERSION", value: "~3" },
         { name: "FUNCTIONS_WORKER_RUNTIME", value: "node" },
         { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~16" },
         { name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
-        { name: "MONGODB_PROTOCOL", value: "mongodb" },
-        { name: "MONGODB_USER", value: dbAccount },
-        { name: "MONGODB_PASS", value: masterKey },
-        { name: "MONGODB_URL", value: endpoint },
-        { name: "MONGODB_DBNAME", value: mongoDB },
       ],
       http20Enabled: true,
       nodeVersion: "~16",
     },
+  });
+  return newFa;
+};
+
+export const addSlotConfig = (
+  rgName: Output<string>,
+  appName: Output<string>
+) => {
+  const webSlot = new web.WebAppSlotConfigurationNames("clwap", {
+    name: appName,
+    resourceGroupName: rgName,
+    connectionStringNames: [
+      "MONGODB_PROTOCAL",
+      "MONGODB_USER",
+      "MONGODB_PORT",
+      "MONGODB_PASS",
+      "MONGODB_URL",
+      "MONGODB_DBNAME",
+    ],
   });
 };

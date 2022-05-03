@@ -54,11 +54,15 @@ const newFA = webApp.functionApp({
   plan: newWebApp.id,
   codeBlobUrl: blobUrl,
   dbAccount: newDBAccount.name,
-  endpoint: newEndPoint,
+  port: "10255",
   masterKey: newMasterKey,
   mongoDB: newMongoDB.name,
   storageConnectionString: newStorageConnectionString,
 });
 
+const newSlotConfig = webApp.addSlotConfig(resourceGroup.name, newFA.name)
+
 //We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
 export const saAccount = newStorageAccount.name;
+
+
