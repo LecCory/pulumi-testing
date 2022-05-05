@@ -52,12 +52,12 @@ export const functionApp = ({
         { name: "MONGODB_PASS", connectionString: masterKey, type: "Custom" },
         {
           name: "MONGODB_URL",
-          connectionString: pulumi.interpolate`${dbAccount}.mongo.cosmos.azure.com:${port}`,
+          connectionString: pulumi.interpolate`${dbAccount}.mongo.cosmos.azure.com:${port}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${dbAccount}@`,
           type: "Custom",
         },
         {
           name: "MONGODB_DBNAME",
-          connectionString: pulumi.interpolate`${mongoDB}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${dbAccount}@`,
+          connectionString: mongoDB,
           type: "Custom",
         },
       ],
