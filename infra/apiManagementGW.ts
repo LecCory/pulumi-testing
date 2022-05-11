@@ -8,10 +8,10 @@ export const apiManagementService =(location: Output<string>, resourceGroup: Out
     
     const apiMgmtGw = new azure_native.apimanagement.ApiManagementService("apiManagementService", {
     location: location,
-    publisherEmail: "foo@contoso.com",
-    publisherName: "foo",
+    publisherEmail: "cory.leclair@gmail.com",
+    publisherName: "Cory Leclair",
     resourceGroupName: resourceGroup,
-    serviceName: "clapimgm001",
+    serviceName: "clapimgm0001",
     sku: {
         capacity: 0,
         name: "Consumption",
