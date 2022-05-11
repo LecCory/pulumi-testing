@@ -4,9 +4,7 @@ import * as cosmos from "./infra/cosmos";
 import * as storage from "./infra/storage";
 import * as webApp from "./infra/webApp";
 import * as webAPIGW from "./infra/apiManagementGW"
-import * as pulumi from "@pulumi/pulumi"
-import * as openAPI from './fixOpenAPI'
-import { Output } from "@pulumi/pulumi";
+
 
 /*
 -- Resource Group section --
@@ -69,6 +67,8 @@ const newWebAPIGW = webAPIGW.apiManagementService(newResourceGroup.location, new
 const newSlotConfig = webApp.addSlotConfig(resourceGroup.name, newFA.name)
 
 //We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
-export const saAccount = newStorageAccount.name;
+export const saAccountName = newStorageAccount.name;
+export const faName = newFA.name
+export const resourceGroupName = newResourceGroup.name
 
 
