@@ -31,7 +31,7 @@ export const codeBlob = new storage.Blob("zip", {
   resourceGroupName: resourceGroup.name,
   accountName: newAzStorage.name,
   containerName: codeContainer.name,
-  source: new pulumi.asset.FileArchive("./assessment/api/"),
+  source: new pulumi.asset.FileArchive("../Assessment/api/"),
 });
 
 // extract connection string by use of helper function
