@@ -3,6 +3,10 @@ import { resourceGroup } from "./infra/resourcegroup";
 import * as cosmos from "./infra/cosmos";
 import * as storage from "./infra/storage";
 import * as webApp from "./infra/webApp";
+import * as webAPIGW from "./infra/apiManagementGW"
+import * as pulumi from "@pulumi/pulumi"
+import * as openAPI from './fixOpenAPI'
+import { Output } from "@pulumi/pulumi";
 
 /*
 -- Resource Group section --
@@ -59,6 +63,8 @@ const newFA = webApp.functionApp({
   mongoDB: newMongoDB.name,
   storageConnectionString: newStorageConnectionString,
 });
+
+const newWebAPIGW = webAPIGW.apiManagementService(newResourceGroup.location, newResourceGroup.name);
 
 const newSlotConfig = webApp.addSlotConfig(resourceGroup.name, newFA.name)
 

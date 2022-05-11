@@ -1,0 +1,118 @@
+#This is a template of the swagger file that corresponds to the FunctionApp endpoints
+openapi: 3.0.1
+info:
+  title: "" 
+  description: ""
+  version: '1.0'
+servers:
+  - url: ""
+paths:
+  '/team/{id}':
+    get:
+      summary: findTeam
+      operationId: get-findteam
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+    delete:
+      summary: deleteTeam
+      operationId: delete-deleteteam
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+  /team:
+    post:
+      summary: createTeam
+      operationId: post-createteam
+      responses:
+        '200':
+          description: 
+  /survey-result:
+    post:
+      summary: createSurveyResult
+      operationId: post-createsurveyresult
+      responses:
+        '200':
+          description: 
+  '/survey-result/{id}':
+    delete:
+      summary: deleteSurveyResult
+      operationId: delete-deletesurveyresult
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+    get:
+      summary: findSurveyResult
+      operationId: get-findsurveyresult
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+  '/survey/{id}':
+    delete:
+      summary: deleteSurvey
+      operationId: delete-deletesurvey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+    get:
+      summary: findSurvey
+      operationId: get-findsurvey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: ''
+      responses:
+        '200':
+          description: 
+  /survey:
+    post:
+      summary: createSurvey
+      operationId: post-createsurvey
+      responses:
+        '200':
+          description: 
+components:
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]
