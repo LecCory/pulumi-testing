@@ -34,27 +34,27 @@ const newStaticContainer = storage.newStorageContainer;
 
 /*
 -- WebApp and Function App section --
-Container for function Apps API ss part of the same Storage account created previously 
+
 We pass all the endpoint data from the Mongo creation step to create the env variable
 Pulumi uploads the functions to the container as part of this step
 */
 const newFunctionAppContainer = storage.codeContainer;
-const uploadFunctions = storage.codeBlob;
+
 const newStorageConnectionString = storage.storageConnString(
   newResourceGroup.name,
   newStorageAccount.name
 );
-const blobUrl = storage.codeBlobUrl(
-  uploadFunctions,
-  newFunctionAppContainer,
-  newStorageAccount,
-  newResourceGroup
-);
+// const blobUrl = storage.codeBlobUrl(
+//   uploadFunctions,
+//   newFunctionAppContainer,
+//   newStorageAccount,
+//   newResourceGroup
+// );
 const newWebApp = webApp.newAppPlan({ resourceGroup: resourceGroup.name });
 const newFA = webApp.functionApp({
   resourceGroup: newResourceGroup.name,
   plan: newWebApp.id,
-  codeBlobUrl: blobUrl,
+  //codeBlobUrl: blobUrl,
   dbAccount: newDBAccount.name,
   port: "10255",
   masterKey: newMasterKey,
@@ -67,8 +67,6 @@ const newWebAPIGW = webAPIGW.apiManagementService(newResourceGroup.location, new
 const newSlotConfig = webApp.addSlotConfig(resourceGroup.name, newFA.name)
 
 //We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
-export const saAccountName = newStorageAccount.name;
-export const faName = newFA.name
+export const storageAccountName = newStorageAccount.name;
+export const containerName = newFA.name
 export const resourceGroupName = newResourceGroup.name
-
-

@@ -20,7 +20,7 @@ export const functionApp = ({
   resourceGroup,
   plan,
   storageConnectionString,
-  codeBlobUrl,
+  // codeBlobUrl,
   dbAccount,
   masterKey,
   port,
@@ -29,7 +29,7 @@ export const functionApp = ({
   resourceGroup: Output<string>;
   plan: Output<string>;
   storageConnectionString: Output<string>;
-  codeBlobUrl: Output<string>;
+  // codeBlobUrl: Output<string>;
   dbAccount: Output<string>;
   masterKey: Output<string>;
   port: string;
@@ -66,7 +66,7 @@ export const functionApp = ({
         { name: "FUNCTIONS_EXTENSION_VERSION", value: "~3" },
         { name: "FUNCTIONS_WORKER_RUNTIME", value: "node" },
         { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~16" },
-        { name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
+        //{ name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
       ],
       http20Enabled: true,
       nodeVersion: "~16",

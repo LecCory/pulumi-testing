@@ -25,14 +25,14 @@ export const codeContainer = new storage.BlobContainer("zips", {
   resourceGroupName: resourceGroup.name,
   accountName: newAzStorage.name,
 });
-
+// CL: 2022-05-12 - pipeline command will take care of the function deploy
 // Upload Azure Functions code as a zip archive to the storage account.
-export const codeBlob = new storage.Blob("zip", {
-  resourceGroupName: resourceGroup.name,
-  accountName: newAzStorage.name,
-  containerName: codeContainer.name,
-  source: new pulumi.asset.FileArchive("../Assessment/api/"),
-});
+// export const codeBlob = new storage.Blob("zip", {
+//   resourceGroupName: resourceGroup.name,
+//   accountName: newAzStorage.name,
+//   containerName: codeContainer.name,
+//   source: new pulumi.asset.FileArchive("./api" || "../Assessment/api/"),
+// });
 
 // extract connection string by use of helper function
 
@@ -43,16 +43,16 @@ export const storageConnString = (
   return getConnectionString(resourceGroup, storageName);
 };
 
-export const codeBlobUrl = (
-  codeBlob: storage.Blob,
-  codeContainer: storage.BlobContainer,
-  newAzStorage: storage.StorageAccount,
-  resourceGroup: any
-) => {
-  return signedBlobReadUrl(
-    codeBlob,
-    codeContainer,
-    newAzStorage,
-    resourceGroup
-  );
-};
+// export const codeBlobUrl = (
+//   codeBlob: storage.Blob,
+//   codeContainer: storage.BlobContainer,
+//   newAzStorage: storage.StorageAccount,
+//   resourceGroup: any
+// ) => {
+//   return signedBlobReadUrl(
+//     codeBlob,
+//     codeContainer,
+//     newAzStorage,
+//     resourceGroup
+//   );
+// };
