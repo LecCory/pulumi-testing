@@ -52,7 +52,7 @@ export const functionApp = ({
         { name: "MONGODB_PASS", connectionString: masterKey, type: "Custom" },
         {
           name: "MONGODB_URL",
-          connectionString: pulumi.interpolate`mongodb://${dbAccount}:${masterKey}@${dbAccount}.mongo.cosmos.azure.com:${port}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${dbAccount}@`,
+          connectionString: pulumi.interpolate`${dbAccount}.mongo.cosmos.azure.com:${port}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${dbAccount}@`,
           type: "Custom",
         },
         {
@@ -63,10 +63,10 @@ export const functionApp = ({
       ],
       appSettings: [
         { name: "AzureWebJobsStorage", value: storageConnectionString },
-        { name: "FUNCTIONS_EXTENSION_VERSION", value: "~3" },
+        { name: "FUNCTIONS_EXTENSION_VERSION", value: "~4" },
         { name: "FUNCTIONS_WORKER_RUNTIME", value: "node" },
         { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "~16" },
-        //{ name: "WEBSITE_RUN_FROM_PACKAGE", value: codeBlobUrl },
+        { name: "WEBSITE_RUN_FROM_PACKAGE", value: "1" },
       ],
       http20Enabled: true,
       nodeVersion: "~16",
