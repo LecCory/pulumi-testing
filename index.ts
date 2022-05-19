@@ -68,5 +68,5 @@ const newSlotConfig = webApp.addSlotConfig(resourceGroup.name, newFA.name)
 
 //We export this to the pipeline so Azure DevOps can upload the UI data to the static webstorage
 export const storageAccountName = newStorageAccount.name;
-export const containerName = newFA.name
+export const faName = newFA.name
 export const resourceGroupName = newResourceGroup.name
